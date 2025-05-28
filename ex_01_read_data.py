@@ -16,7 +16,16 @@ def load_data(data_path: Path) -> pd.DataFrame:
         FileNotFoundError: If the specified data file does not exist.
         ValueError: If the data is empty after removing unlabeled data and dropping NaN values.
     """
-    pass
+
+    if not data_path.is_file():
+        raise FileNotFoundError(f"Data on path {data_path} not found!")
+
+    data = remove_unlabeled_data(pd.read_csv(data_path))
+
+    if data.empty:
+        raise ValueError("Data is empty after removing unlabeled data and dropping NaN values!")
+
+    return data
 
 def remove_unlabeled_data(data: pd.DataFrame) -> pd.DataFrame:
     """
@@ -28,7 +37,11 @@ def remove_unlabeled_data(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame with unlabeled data removed.
     """
-    pass
+    data[data['labels' != -1]].copy()
+
+    data.dropna
+
+    return data
 
 
 def convert_to_np(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
