@@ -37,9 +37,9 @@ def remove_unlabeled_data(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame with unlabeled data removed.
     """
-    data[data['labels' != -1]].copy()
+    data = data[data['labels'] != -1].copy()
 
-    data.dropna
+    data.dropna(inplace=True)
 
     return data
 
@@ -57,8 +57,14 @@ def convert_to_np(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarra
             - exp_ids (np.ndarray): Array of experiment IDs
             - data (np.ndarray): Combined array of current and voltage features
     """
-    pass
 
+    labels = data['labels'].to_numpy()
+    exp_ids = data['exp_ids'].to_numpy()
+
+    features_columns = [f'I_{i:03d}' for i in range(200)] + [f'V_{i:03d}' for i in range(200)]
+    features = data[features_columns].to_numpy()
+
+    return labels, exp_ids, features
 
 def create_sliding_windows_first_dim(data: np.ndarray, sequence_length: int) -> np.ndarray:
     """
