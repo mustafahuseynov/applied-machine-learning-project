@@ -77,7 +77,21 @@ def create_sliding_windows_first_dim(data: np.ndarray, sequence_length: int) -> 
     Returns:
         np.ndarray: Windowed data of shape (n_windows, sequence_length*timesteps, features)
     """
-    pass
+
+    n_samples, timesteps, features = data.shape
+
+    n_windows = n_samples - sequence_length + 1
+
+    windowed_data_list = []
+
+    for i in range(n_windows):
+        current_window = data[i : i + sequence_length, :, :]
+
+        reshaped_window = current_window.reshape(sequence_length * timesteps, features)
+        
+        windowed_data_list.append(reshaped_window)
+
+    return np.array(windowed_data_list)
 
 def get_welding_data(path: Path, n_samples: int | None = None, return_sequences: bool = False, sequence_length: int = 100) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -97,4 +111,53 @@ def get_welding_data(path: Path, n_samples: int | None = None, return_sequences:
             - np.ndarray: Array of labels
             - np.ndarray: Array of experiment IDs
     """
-    pass
+    cache_dir = path.parent
+    file_stem = path.stem
+    labels_cache_path = cache_dir / f"{file_stem}_labels.npy"
+    exp_ids_cache_path = cache_dir / f"{file_stem}_exp_ids.npy"
+    features_cache_path = cache_dir / f"{file_stem}_features.npy"
+
+    # Check if cached numpy files exist
+    if labels_cache_path.is_file() and exp_ids_cache_path.is_file() and features_cache_path.is_file():
+        print(f"Loading data from cache: {labels_cache_path}, {exp_ids_cache_path}, {features_cache_path}")
+        labels = np.load(labels_cache_path)
+        exp_ids = np.load(exp_ids_cache_path)
+        features = np.load(features_cache_path)
+    else:
+        print(f"Cache files not found. Loading data from CSV: {path}")
+        
+        df = load_data(path)
+        
+        labels, exp_ids, features = convert_to_np(df)
+
+        np.save(labels_cache_path, labels)
+        np.save(exp_ids_cache_path, exp_ids)
+        np.save(features_cache_path, features)
+        print("Data saved to cache.")
+
+    if return_sequences:
+        print(f"Creating sliding windows with sequence length: {sequence_length}")
+
+        current_features = features[:, :200]  # First 200 columns are current (I)
+        voltage_features = features[:, 200:] # Next 200 columns are voltage (V)
+        
+        features_reshaped = np.stack((current_features, voltage_features), axis=-1)
+
+        features = create_sliding_windows_first_dim(features_reshaped, sequence_length)
+        
+        labels = labels[sequence_length - 1:]
+        exp_ids = exp_ids[sequence_length - 1:]
+
+    if n_samples is not None and n_samples < len(labels):
+        print(f"Sampling {n_samples} samples from the data.")
+
+        indices = np.random.choice(len(labels), n_samples, replace=False)
+
+        labels = labels[indices]
+        exp_ids = exp_ids[indices]
+        features = features[indices]
+    elif n_samples is not None and n_samples >= len(labels):
+        print(f"Requested n_samples ({n_samples}) is greater than or equal to available data ({len(labels)}). Returning all available data.")
+
+
+    return features, labels, exp_ids
