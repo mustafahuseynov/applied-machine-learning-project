@@ -117,7 +117,6 @@ def get_welding_data(path: Path, n_samples: int | None = None, return_sequences:
     exp_ids_cache_path = cache_dir / f"{file_stem}_exp_ids.npy"
     features_cache_path = cache_dir / f"{file_stem}_features.npy"
 
-    # Check if cached numpy files exist
     if labels_cache_path.is_file() and exp_ids_cache_path.is_file() and features_cache_path.is_file():
         print(f"Loading data from cache: {labels_cache_path}, {exp_ids_cache_path}, {features_cache_path}")
         labels = np.load(labels_cache_path)
@@ -138,8 +137,8 @@ def get_welding_data(path: Path, n_samples: int | None = None, return_sequences:
     if return_sequences:
         print(f"Creating sliding windows with sequence length: {sequence_length}")
 
-        current_features = features[:, :200]  # First 200 columns are current (I)
-        voltage_features = features[:, 200:] # Next 200 columns are voltage (V)
+        current_features = features[:, :200]
+        voltage_features = features[:, 200:]
         
         features_reshaped = np.stack((current_features, voltage_features), axis=-1)
 
