@@ -57,14 +57,21 @@ def convert_to_np(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarra
             - exp_ids (np.ndarray): Array of experiment IDs
             - data (np.ndarray): Combined array of current and voltage features
     """
-
     labels = data['labels'].to_numpy()
     exp_ids = data['exp_ids'].to_numpy()
 
-    features_columns = [f'I_{i:03d}' for i in range(200)] + [f'V_{i:03d}' for i in range(200)]
-    features = data[features_columns].to_numpy()
+    current_cols = [col for col in data.columns if col.startswith('I_')]
+    voltage_cols = [col for col in data.columns if col.startswith('V_')]
 
-    return labels, exp_ids, features
+    current_cols.sort()
+    voltage_cols.sort()
+
+    current_data = data[current_cols].to_numpy()
+    voltage_data = data[voltage_cols].to_numpy()
+
+    features_data = np.stack((current_data, voltage_data), axis=-1)
+
+    return labels, exp_ids, features_data
 
 def create_sliding_windows_first_dim(data: np.ndarray, sequence_length: int) -> np.ndarray:
     """
