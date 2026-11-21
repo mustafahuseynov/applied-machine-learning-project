@@ -17,7 +17,19 @@ def load_data(data_path: Path) -> pd.DataFrame:
     Raises:
         FileNotFoundError: If the specified data file does not exist.
     """
-    raise NotImplementedError("Implement Exercise 1.1")
+
+    if not data_path.exists():
+        raise FileNotFoundError(f"Data file not found at {data_path}")
+
+    df = pd.read_csv(data_path)
+
+    # removes row if any column is NaN
+    df = df.dropna()
+
+    # removes rows with unlabled label (label == -1)
+    df = remove_unlabeled_data(df)
+
+    return df
 
 def remove_unlabeled_data(data: pd.DataFrame) -> pd.DataFrame:
     """
@@ -29,7 +41,9 @@ def remove_unlabeled_data(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame with unlabeled data removed.
     """
-    raise NotImplementedError("Implement Exercise 1.2")
+    data = data[data['labels'] != -1]
+
+    return data
 
 
 def convert_to_np(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -45,8 +59,22 @@ def convert_to_np(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarra
             - exp_ids (np.ndarray): Array of experiment IDs
             - data (np.ndarray): Combined array of current and voltage features
     """
-    raise NotImplementedError("Implement Exercise 1.3")
 
+    labels = data['labels'].to_numpy()
+    exp_ids = data['exp_ids'].to_numpy()
+
+    current_cols = [col for col in data.columns if col.startswith('I')]
+    voltage_cols = [col for col in data.columns if col.startswith('V')]
+
+    current = data[current_cols].to_numpy()
+    voltage = data[voltage_cols].to_numpy()
+
+    if(current.shape != voltage.shape):
+        raise ValueError(f"Current and voltage arrays must have the same shape. Current shape: {current.shape}, Voltage shape: {voltage.shape}")
+
+    np_data = np.stack((current, voltage), axis=-1)
+
+    return labels, exp_ids, np_data
 
 def create_sliding_windows_first_dim(data: np.ndarray, sequence_length: int) -> np.ndarray:
     """
