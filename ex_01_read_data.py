@@ -87,7 +87,14 @@ def create_sliding_windows_first_dim(data: np.ndarray, sequence_length: int) -> 
     Returns:
         np.ndarray: Windowed data of shape (n_windows, sequence_length, timesteps, features)
     """
-    raise NotImplementedError("Implement Exercise 1.4")
+    if sequence_length <= 0 or sequence_length > data.shape[0]:
+        raise ValueError("Invalid sequence_length")
+
+    windows = np.lib.stride_tricks.sliding_window_view(data, window_shape=sequence_length, axis=0)
+
+    windows = np.moveaxis(windows, -1, 1)
+
+    return windows
 
 def get_welding_data(path: Path, n_samples: int | None = None, return_sequences: bool = False, sequence_length: int = 100) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
